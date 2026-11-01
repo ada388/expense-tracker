@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+  <meta charset="UTF-8">
+  <title>Expense Tracker</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: #0f0f1a;
+      color: white;
+      min-height: 100vh;
+      padding: 30px 15px;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: #e94560;
+      margin-bottom: 25px;
+    }
+
+    .balance-box {
+      background: #1a1a2e;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      margin-bottom: 25px;
+      border: 1px solid #e94560;
+    }
+
+    .balance-box h2 {
+      font-size: 16px;
+      color: #aaa;
+      margin-bottom: 8px;
+    }
+
+    .balance-box .amount {
+      font-size: 36px;
+      font-weight: bold;
+      color: #e94560;
+    }
+
+    .form {
+      background: #1a1a2e;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 25px;
+    }
+
+    .form h3 {
+      margin-bottom: 15px;
+      color: #e94560;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 12px;
+      border: none;
+      border-radius: 8px;
+      background: #16213e;
+      color: white;
+      font-size: 15px;
+    }
+
+    input::placeholder {
+      color: #888;
+    }
+
+    button.add-btn {
+      width: 100%;
+      padding: 12px;
+      background: #e94560;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button.add-btn:hover {
+      background: #ff6b81;
+    }
+
+    .expenses-list h3 {
+      margin-bottom: 15px;
+      color: #e94560;
+    }
+
+    .expense-item {
+      background: #1a1a2e;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .expense-info {
+      flex: 1;
+    }
+
+    .expense-info .name {
+      font-size: 16px;
+      margin-bottom: 4px;
+    }
+
+    .expense-info .category {
+      font-size: 13px;
+      color: #888;
+    }
+
+    .expense-amount {
+      font-size: 17px;
+      font-weight: bold;
+      color: #e94560;
+      margin-right: 15px;
+    }
+
+    .delete-btn {
+      background: #533483;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .delete-btn:hover {
+      background: #6b4c9a;
+    }
+
+    .empty {
+      text-align: center;
+      color: #666;
+      padding: 30px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Expense Tracker</h1>
+
+    <div class="balance-box">
+      <h2>Totali i Shpenzimeve</h2>
+      <div class="amount" id="total">0 Lekë</div>
+    </div>
+
+    <div class="form">
+      <h3>Shto Shpenzim</h3>
+      <input type="text" id="name" placeholder="Emri i shpenzimit (p.sh. Ushqim)">
+      <input type="number" id="amount" placeholder="Shuma (p.sh. 500)">
+      <select id="category">
+        <option value="Ushqim">Ushqim</option>
+        <option value="Transport">Transport</option>
+        <option value="Argëtim">Argëtim</option>
+        <option value="Fatura">Fatura</option>
+        <option value="Tjetër">Tjetër</option>
+      </select>
+      <button class="add-btn" onclick="addExpense()">Shto Shpenzim</button>
+    </div>
+
+    <div class="expenses-list">
+      <h3>Lista e Shpenzimeve</h3>
+      <div id="list"></div>
+    </div>
+  </div>
+
+  <script>
+    let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
+
+    function saveExpenses() {
+      localStorage.setItem("expenses", JSON.stringify(expenses));
+    }
+
+    function updateTotal() {
+      const total = expenses.reduce((sum, exp) => sum + Number(exp.amount), 0);
+      document.getElementById("total").textContent = total + " Lekë";
+    }
+
+    function renderExpenses() {
+      const list = document.getElementById("list");
+
+      if (expenses.length === 0) {
+        list.innerHTML = '<div class="empty">Nuk ka shpenzime ende</div>';
+        return;
+      }
+
+      list.innerHTML = expenses.map((exp, index) => `
+        <div class="expense-item">
+          <div class="expense-info">
+            <div class="name">${exp.name}</div>
+            <div class="category">${exp.category}</div>
+          </div>
+          <div class="expense-amount">${exp.amount} Lekë</div>
+          <button class="delete-btn" onclick="deleteExpense(${index})">Fshi</button>
+        </div>
+      `).join("");
+    }
+
+    function addExpense() {
+      const name = document.getElementById("name").value.trim();
+      const amount = document.getElementById("amount").value;
+      const category = document.getElementById("category").value;
+
+      if (!name || !amount || amount <= 0) {
+        alert("Plotëso emrin dhe shumën!");
+        return;
+      }
+
+      expenses.push({
+        name: name,
+        amount: amount,
+        category: category
+      });
+
+      saveExpenses();
+      renderExpenses();
+      updateTotal();
+
+      // Pastro fushat
+      document.getElementById("name").value = "";
+      document.getElementById("amount").value = "";
+    }
+
+    function deleteExpense(index) {
+      expenses.splice(index, 1);
+      saveExpenses();
+      renderExpenses();
+      updateTotal();
+    }
+
+    // Nisja
+    renderExpenses();
+    updateTotal();
+  </script>
+
+</body>
+</html>
